@@ -44,8 +44,8 @@ router.post('/login', async (req: Request, res: Response) => {
       return res.status(401).json({ status: 'error', message: 'Invalid email or password' });
     }
 
-    const access_token = generateAccessToken(user.email);
-    const refresh_token = generateRefreshToken(user.email);
+    const access_token = generateAccessToken(user);
+    const refresh_token = generateRefreshToken(user);
     
     res.cookie('refresh_token', refresh_token, {
       httpOnly: true,
@@ -82,8 +82,8 @@ router.post('/refresh', async (req: Request, res: Response) => {
   try {
     const user: USER | null = await verifyToken('refresh', refreshToken);
     if (!user) return res.sendStatus(403);
-    const newAccessToken = generateAccessToken(user.email);
-    res.json({ user: { id: user._id, email: user.email, full_name: user.full_name, tax_code: user.tax_code }, access_token: newAccessToken });
+    const newAccessToken = generateAccessToken(user);
+    res.json({ user, access_token: newAccessToken });
   } catch (err) {
     return res.sendStatus(403);
   }
