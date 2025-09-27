@@ -70,7 +70,7 @@ router.post('/login', async (req: Request, res: Response) => {
   }
 });
 
-router.post('/logout', (req: Request, res: Response) => {
+router.get('/logout', (req: Request, res: Response) => {
   res.clearCookie('refresh_token', { httpOnly: true, sameSite: 'strict' });
   return res.status(200).json({ status: 'success', message: 'User logged out successfully' });
 });
