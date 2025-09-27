@@ -1,5 +1,5 @@
 import type { USER } from '../types.js';
-import { addUser, findUserByEmail, isUserRegistered } from '../services/user.js';
+import { registerUser, findUserByEmail, isUserRegistered } from '../services/user.js';
 import { Router, type Request, type Response } from 'express';
 import { comparePassword } from '../utils/password.js';
 import { generateAccessToken, generateRefreshToken, verifyToken } from '../utils/jwt.js';
@@ -13,13 +13,14 @@ router.post('/register', async (req: Request, res: Response) => {
     if (await isUserRegistered(email, tax_code)) {
       return res.status(409).json({ status: 'error', message: 'User already exists' });
     } else {
-      await addUser({
+      await registerUser({
         full_name,
         email,
         tax_code,
         password,
         birth_date,
-        birth_place
+        birth_place,
+        condominiums: []
       });
 
 

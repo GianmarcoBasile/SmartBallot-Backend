@@ -10,7 +10,12 @@ export async function connectToDatabase(): Promise<mongoDB.Db> {
   return client.db(process.env.DB_NAME);
 }
 
-export async function getUsersCollection(): Promise<mongoDB.Collection> {
+export async function getUsersCollection(): Promise<mongoDB.Collection<USER>> {
   const db = await connectToDatabase();
   return db.collection("users");
+}
+
+export async function getCondominiumsColletion(): Promise<mongoDB.Collection> {
+  const db = await connectToDatabase();
+  return db.collection("condominiums");
 }
