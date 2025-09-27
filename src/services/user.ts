@@ -10,14 +10,32 @@ export async function addUser(user: USER): Promise<mongoDB.InsertOneResult<mongo
   return result;
 }
 
-export async function findUserByEmail(email: string): Promise<mongoDB.Document | null> {
+export async function findUserByEmail(email: string): Promise<USER | null> {
   const collection: mongoDB.Collection = await getUsersCollection();
-  return collection.findOne({ email });
+  const userDocument: mongoDB.Document | null = await collection.findOne({ email });
+  const user:USER|null = userDocument ? {
+    full_name: userDocument.full_name,
+    email: userDocument.email,
+    tax_code: userDocument.tax_code,
+    password: userDocument.password,
+    birth_date: userDocument.birth_date,
+    birth_place: userDocument.birth_place
+  } : null;
+  return user;
 }
 
-export async function findUserByTaxCode(tax_code: string): Promise<mongoDB.Document | null> {
+export async function findUserByTaxCode(tax_code: string): Promise<USER | null> {
   const collection: mongoDB.Collection = await getUsersCollection();
-  return collection.findOne({ tax_code });
+  const userDocument: mongoDB.Document | null = await collection.findOne({ tax_code });
+  const user:USER|null = userDocument ? {
+    full_name: userDocument.full_name,
+    email: userDocument.email,
+    tax_code: userDocument.tax_code,
+    password: userDocument.password,
+    birth_date: userDocument.birth_date,
+    birth_place: userDocument.birth_place
+  } : null;
+  return user;
 }
 
 export async function isUserRegistered(email: string, tax_code?: string): Promise<boolean> {
