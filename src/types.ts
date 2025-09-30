@@ -14,14 +14,24 @@ export interface USER {
 export interface CONDOMINIUM {
   name: string;
   address: string;
-  condominium_taxcode: string;
-  num_units: number;
   city: string;
-  postal_code: string;
+  postalCode: string;
   province: string;
-  country: string;
-  users_taxcodes: string[];
+  taxCode: string;
   description?: string;
-  admin: USER;
+  totalUnits: number;
+  admin: {
+    full_name: string;
+    email: string;
+    tax_code: string;
+  }
+  users: {
+    full_name: string;
+    email: string;
+    tax_code: string;
+    unit: string;
+    role: string;
+    join_date: string;
+  }[];
   _id?: ObjectId;
 }

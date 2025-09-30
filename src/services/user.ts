@@ -60,3 +60,4 @@ export async function addCondominiumToUser(tax_code: string, condominium: CONDOM
   );
   return result;
 }
+

@@ -1,6 +1,6 @@
 import * as mongoDB from "mongodb";
 import dotenv from "dotenv";
-import type { USER } from "./types.js";
+import type { CONDOMINIUM, USER } from "./types.js";
 
 dotenv.config();
 
@@ -15,7 +15,7 @@ export async function getUsersCollection(): Promise<mongoDB.Collection<USER>> {
   return db.collection("users");
 }
 
-export async function getCondominiumsColletion(): Promise<mongoDB.Collection> {
+export async function getCondominiumsCollection(): Promise<mongoDB.Collection<CONDOMINIUM>> {
   const db = await connectToDatabase();
   return db.collection("condominiums");
 }
