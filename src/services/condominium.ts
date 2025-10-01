@@ -12,6 +12,7 @@ export async function registerCondominium(condominium: CONDOMINIUM): Promise<mon
   const collection: mongoDB.Collection<CONDOMINIUM> = await getCondominiumsCollection();
   const condominiumDocument: mongoDB.Document | null = await collection.findOne({ _id: new mongoDB.ObjectId(condominium_id) });
   const condominium:CONDOMINIUM|null = condominiumDocument ? {
+    _id: condominiumDocument._id,
     name: condominiumDocument.name,
     address: condominiumDocument.address,
     totalUnits: condominiumDocument.totalUnits,
