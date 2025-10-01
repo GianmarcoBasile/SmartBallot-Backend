@@ -1,5 +1,6 @@
-import type { USER } from '../types.js';
-import { registerUser, findUserByEmail, isUserRegistered } from '../services/user.js';
+import type { CONDOMINIUM, USER } from '../types.js';
+import { registerUser, findUserByEmail, isUserRegistered, updateLastLogin } from '../services/user.js';
+import { getCondominiumsFromUser } from '../services/condominium.js';
 import { Router, type Request, type Response } from 'express';
 import { comparePassword } from '../utils/password.js';
 import { generateAccessToken, generateRefreshToken, verifyToken } from '../utils/jwt.js';
@@ -13,16 +14,19 @@ router.post('/register', async (req: Request, res: Response) => {
     if (await isUserRegistered(email, tax_code)) {
       return res.status(409).json({ status: 'error', message: 'User already exists' });
     } else {
-      await registerUser({
-        full_name,
-        email,
-        tax_code,
-        password,
-        birth_date,
-        birth_place,
-        condominiums: []
-      });
-
+      const condominiums:CONDOMINIUM[] = await getCondominiumsFromUser(tax_code);
+      
+      if (password){
+        await registerUser({
+          full_name,
+          email,
+          tax_code,
+          password,
+          birth_date,
+          birth_place,
+          condominiums
+        });
+      }
 
       return res.status(201).json({ status: 'success', message: 'User registered successfully'});
     }
@@ -41,7 +45,7 @@ router.post('/login', async (req: Request, res: Response) => {
       return res.status(401).json({ status: 'error', message: 'Invalid email or password' });
     }
 
-    if (await comparePassword(password, user.password) === false) {
+    if (await comparePassword(password, user.password ?? '') === false) {
       return res.status(401).json({ status: 'error', message: 'Invalid email or password' });
     }
 
@@ -54,6 +58,8 @@ router.post('/login', async (req: Request, res: Response) => {
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
 
+    await updateLastLogin(user.email);
+    
     return res.status(200).json({ 
       status: 'success', 
       message: 'User logged in successfully', 

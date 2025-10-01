@@ -61,3 +61,10 @@ export async function removeResidentFromCondominium(condominium_taxcode: string,
   );
   return result;
 }
+
+export async function getCondominiumsFromUser(user_tax_code: string): Promise<CONDOMINIUM[]> {
+  const collection: mongoDB.Collection<CONDOMINIUM> = await getCondominiumsCollection();
+  const condominiumsCursor = collection.find({ "users.tax_code": user_tax_code });
+  const condominiums: CONDOMINIUM[] = await condominiumsCursor.toArray();
+  return condominiums;
+}

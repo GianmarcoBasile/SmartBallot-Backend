@@ -4,10 +4,12 @@ export interface USER {
   full_name: string;
   email: string;
   tax_code: string;
-  password: string;
   birth_date: string;
   birth_place: string;
   condominiums: CONDOMINIUM[];
+  created_at?: string;
+  last_login?: string;
+  password?: string;
   _id?: ObjectId;
 }
 

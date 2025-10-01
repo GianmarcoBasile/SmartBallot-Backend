@@ -4,6 +4,7 @@ import express from 'express';
 import cookieparser from 'cookie-parser';
 import authRoutes from './routes/auth.js';
 import condominiumRoutes from './routes/condominium.js';
+import userRoutes from './routes/users.js';
 
 dotenv.config();
 
@@ -22,6 +23,7 @@ const port: number = Number(process.env.SERVER_PORT) || 3000;
 
 app.use('/api/auth', authRoutes);
 app.use('/api/condominiums', condominiumRoutes);
+app.use('/api/user', userRoutes);
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
