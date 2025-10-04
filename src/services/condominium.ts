@@ -1,6 +1,6 @@
 import * as mongoDB from "mongodb";
 import { getCondominiumsCollection } from "../database.js";
-import type { CONDOMINIUM } from "../types.js";
+import type { CONDOMINIUM, ELECTION } from "../types.js";
 
 export async function registerCondominium(condominium: CONDOMINIUM): Promise<mongoDB.InsertOneResult<mongoDB.Document>> {
   const collection: mongoDB.Collection<CONDOMINIUM> = await getCondominiumsCollection();
@@ -22,7 +22,8 @@ export async function registerCondominium(condominium: CONDOMINIUM): Promise<mon
     taxCode: condominiumDocument.taxCode,
     admin: condominiumDocument.admin,
     users: condominiumDocument.users,
-    description: condominiumDocument.description
+    description: condominiumDocument.description,
+    elections: condominiumDocument.elections
   } : null;
   return condominium;
 }
@@ -40,7 +41,8 @@ export async function findCondominiumByTaxCode(condominium_taxcode: string): Pro
     taxCode: condominiumDocument.taxCode,
     admin: condominiumDocument.admin,
     users: condominiumDocument.users,
-    description: condominiumDocument.description
+    description: condominiumDocument.description,
+    elections: condominiumDocument.elections
   } : null;
   return condominium;
 }
@@ -68,4 +70,13 @@ export async function getCondominiumsFromUser(user_tax_code: string): Promise<CO
   const condominiumsCursor = collection.find({ "users.tax_code": user_tax_code });
   const condominiums: CONDOMINIUM[] = await condominiumsCursor.toArray();
   return condominiums;
+}
+
+export async function createCondominiumElection(condominium_id: string, election: ELECTION): Promise<mongoDB.UpdateResult> {
+  const collection: mongoDB.Collection<CONDOMINIUM> = await getCondominiumsCollection();
+  const result = await collection.updateOne(
+    {_id: new mongoDB.ObjectId(condominium_id)},
+    { $push: {elections: election}}
+  )
+  return result;
 }

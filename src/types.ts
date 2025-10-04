@@ -13,6 +13,18 @@ export interface USER {
   _id?: ObjectId;
 }
 
+export interface ELECTION {
+  name: string;
+  description: string;
+  created_at: string;
+  duration: number;
+  options: {
+    id: number;
+    name: string;
+  }[];
+  _id?: ObjectId;
+}
+
 export interface CONDOMINIUM {
   name: string;
   address: string;
@@ -35,5 +47,6 @@ export interface CONDOMINIUM {
     role: string;
     join_date: string;
   }[];
+  elections: ELECTION[],
   _id?: ObjectId;
 }

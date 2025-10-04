@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from "express";
 import type { CONDOMINIUM } from "../types.js";
 import { addCondominiumToUser, getUserCondominiums } from "../services/user.js";
-import { addResidentToCondominium, findCondominiumById, registerCondominium, removeResidentFromCondominium } from "../services/condominium.js";
+import { addResidentToCondominium, createCondominiumElection, findCondominiumById, registerCondominium, removeResidentFromCondominium } from "../services/condominium.js";
 
 const router:Router = Router();
 
@@ -70,6 +70,24 @@ router.get('/:id', async (req:Request, res:Response) => {
   } catch (error) {
     console.error('Error retrieving condominium:', error);
     return res.status(500).json({status: 'error', message: 'Failed to retrieve condominium'});
+  }
+});
+
+router.post('/:id/createElection', async (req:Request, res:Response) => {
+  if(!req.params.id) {
+    return res.status(400).json({status: 'error', message: 'Condominium ID is required'});
+  }
+  const condominium_id = req.params.id;
+  try {
+    const { election } = req.body;
+    if (!election) {
+      return res.status(400).json({status: 'error', message: 'Election data is required'});
+    }
+    await createCondominiumElection(condominium_id, election);
+    return res.status(201).json({status: 'success', message: 'Election created successfully'});
+  } catch (error) {
+    console.error('Error creating new election:', error);
+    return res.status(500).json({status: 'error', message: 'Error creating new election'});
   }
 });
 
