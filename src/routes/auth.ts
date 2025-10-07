@@ -10,7 +10,7 @@ const router: Router = Router();
 router.post('/register', async (req: Request, res: Response) => {
   try {
     const data: USER = req.body;
-    const {full_name, email, tax_code, password, birth_date, birth_place} = data;
+    const {full_name, email, tax_code, password, birth_date, birth_place, identity_commitment} = data;
     if (await isUserRegistered(email, tax_code)) {
       return res.status(409).json({ status: 'error', message: 'User already exists' });
     } else {
@@ -24,7 +24,8 @@ router.post('/register', async (req: Request, res: Response) => {
           password,
           birth_date,
           birth_place,
-          condominiums
+          condominiums,
+          identity_commitment: identity_commitment ?? ''
         });
       }
 

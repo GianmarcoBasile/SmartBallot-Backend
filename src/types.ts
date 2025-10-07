@@ -10,6 +10,7 @@ export interface USER {
   created_at?: string;
   last_login?: string;
   password?: string;
+  identity_commitment?: string;
   _id?: ObjectId;
 }
 
