@@ -1,6 +1,6 @@
 import * as mongoDB from "mongodb";
 import { getCondominiumsCollection } from "../database.js";
-import type { CONDOMINIUM, ELECTION } from "../types.js";
+import type { CONDOMINIUM, ELECTION, USER } from "../types.js";
 
 export async function registerCondominium(condominium: CONDOMINIUM): Promise<mongoDB.InsertOneResult<mongoDB.Document>> {
   const collection: mongoDB.Collection<CONDOMINIUM> = await getCondominiumsCollection();
@@ -79,4 +79,22 @@ export async function createCondominiumElection(condominium_id: string, election
     { $push: {elections: election}}
   )
   return result;
+}
+
+export async function getCondominiumResidents(condominium_id: string): Promise<USER[]> {
+  const collection: mongoDB.Collection<CONDOMINIUM> = await getCondominiumsCollection();
+  const condominiumDocument: mongoDB.Document | null = await collection.findOne({ _id: new mongoDB.ObjectId(condominium_id) });
+  const residents: USER[] = condominiumDocument ? condominiumDocument.users.map((resident: USER) => ({
+      id: resident._id,
+      full_name: resident.full_name,
+      email: resident.email,
+      tax_code: resident.tax_code,
+      birth_date: resident.birth_date,
+      birth_place: resident.birth_place,
+      condominiums: resident.condominiums,
+      created_at: resident.created_at,
+      last_login: resident.last_login,
+      identity_commitment: resident.identity_commitment
+  })) : [];
+  return residents;
 }
