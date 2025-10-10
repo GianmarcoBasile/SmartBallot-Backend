@@ -1,4 +1,4 @@
 export * from './constants';
 export * from './jwt';
 export * from './password';
-export * from './semaphore';
+export * from './blockchain';

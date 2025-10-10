@@ -51,5 +51,6 @@ export interface CONDOMINIUM {
     join_date: string;
   }[];
   elections: ELECTION[],
+  contract_address?: string;
   _id?: ObjectId;
 }
