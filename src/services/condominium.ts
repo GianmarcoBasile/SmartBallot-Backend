@@ -1,10 +1,67 @@
 import * as mongoDB from "mongodb";
 import { getCondominiumsCollection } from "../database.js";
 import type { CONDOMINIUM, ELECTION, USER } from "../types.js";
+import { ethers } from "ethers";
+import { PRIVATE_KEY, RPC_URL, FACTORY_ADDRESS, SEMAPHORE_ADDRESS, FACTORY_ABI } from "../utils";
+
+if (!PRIVATE_KEY || PRIVATE_KEY.length !== 66 || !PRIVATE_KEY.startsWith("0x")) {
+  throw new Error("Chiave privata del wallet del backend non valida o mancante");
+}
+
+if (!RPC_URL) {
+  throw new Error("URL del nodo blockchain non valido o mancante");
+}
+
+if (!/^0x[a-fA-F0-9]{40}$/.test(FACTORY_ADDRESS)) {
+  throw new Error("Indirizzo del contratto Factory non valido");
+}
+
+if (!/^0x[a-fA-F0-9]{40}$/.test(SEMAPHORE_ADDRESS)) {
+  throw new Error("Indirizzo del contratto Semaphore non valido");
+}
 
 export async function registerCondominium(condominium: CONDOMINIUM): Promise<mongoDB.InsertOneResult<mongoDB.Document>> {
   const collection: mongoDB.Collection<CONDOMINIUM> = await getCondominiumsCollection();
   const result = await collection.insertOne(condominium);
+
+  // Gestione creazione condominio su blockchain
+  try {
+    if (!condominium.admin) {
+      throw new Error("Amministratore del condominio mancante");
+    }
+    
+    if (!condominium.admin.wallet_address) {
+      throw new Error("Indirizzo wallet dell'amministratore mancante");
+    }
+    
+    if (!/^0x[a-fA-F0-9]{40}$/.test(condominium.admin.wallet_address)) {
+      throw new Error("Indirizzo wallet dell'amministratore non valido");
+    }
+
+    if(result.acknowledged) {
+
+      const provider = new ethers.JsonRpcProvider(RPC_URL);
+      const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
+      const factoryContract = new ethers.Contract(FACTORY_ADDRESS, FACTORY_ABI, wallet);
+
+      if (typeof factoryContract.createCondominiumVoting !== "function") {
+        throw new Error("Funzione createCondominiumVoting non trovata nell'ABI");
+      }
+
+      const tx = await factoryContract.createCondominiumVoting(result.insertedId.toString(), SEMAPHORE_ADDRESS, condominium.admin.wallet_address);
+
+      const receipt = await tx.wait();
+
+      console.log(`Contratto condominio creato: ${receipt.hash}`);
+
+      await collection.updateOne(
+          { _id: result.insertedId },
+          { $set: { contractAddress: receipt.contractAddress } }
+        );
+    }
+  } catch (error) {
+    console.error("Errore durante la creazione del contratto condominio sulla blockchain:", error);
+  }
   return result;
 }
 
@@ -77,7 +134,7 @@ export async function createCondominiumElection(condominium_id: string, election
   const result = await collection.updateOne(
     {_id: new mongoDB.ObjectId(condominium_id)},
     { $push: {elections: election}}
-  )
+  );
   return result;
 }
 
