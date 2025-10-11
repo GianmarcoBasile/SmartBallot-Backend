@@ -1,7 +1,7 @@
 import * as mongoDB from "mongodb";
 import { getCondominiumsCollection } from "../database.js";
 import type { CONDOMINIUM, ELECTION, USER } from "../types.js";
-import { BACKEND_WALLET_ADDRESS, createCondominiumContract } from "../utils/index.js";
+import { addMembersToElection, BACKEND_WALLET_ADDRESS, createCondominiumContract, createElectionOnBlockchain } from "../utils/index.js";
 
 export async function registerCondominium(condominium: CONDOMINIUM): Promise<mongoDB.InsertOneResult<mongoDB.Document>> {
   const collection: mongoDB.Collection<CONDOMINIUM> = await getCondominiumsCollection();
@@ -47,7 +47,8 @@ export async function registerCondominium(condominium: CONDOMINIUM): Promise<mon
     admin: condominiumDocument.admin,
     users: condominiumDocument.users,
     description: condominiumDocument.description,
-    elections: condominiumDocument.elections
+    elections: condominiumDocument.elections,
+    contract_address: condominiumDocument.contract_address
   } : null;
   return condominium;
 }
@@ -66,7 +67,8 @@ export async function findCondominiumByTaxCode(condominium_taxcode: string): Pro
     admin: condominiumDocument.admin,
     users: condominiumDocument.users,
     description: condominiumDocument.description,
-    elections: condominiumDocument.elections
+    elections: condominiumDocument.elections,
+    contract_address: condominiumDocument.contract_address,
   } : null;
   return condominium;
 }
@@ -98,17 +100,68 @@ export async function getCondominiumsFromUser(user_tax_code: string): Promise<CO
 
 export async function createCondominiumElection(condominium_id: string, election: ELECTION): Promise<mongoDB.UpdateResult> {
   const collection: mongoDB.Collection<CONDOMINIUM> = await getCondominiumsCollection();
-  const result = await collection.updateOne(
-    {_id: new mongoDB.ObjectId(condominium_id)},
-    { $push: {elections: election}}
-  )
-  return result;
+  
+  // Prima ottieni il condominio per avere l'indirizzo del contratto
+  const condominium = await findCondominiumById(condominium_id);
+  if (!condominium) {
+    throw new Error("Condominium not found");
+  }
+  
+  if (!condominium.contract_address) {
+    throw new Error("Condominium contract not deployed");
+  }
+  
+  try {
+    // Crea l'elezione sul contratto smart
+    const blockchainElectionId = await createElectionOnBlockchain(
+      condominium.contract_address,
+      election
+    );
+
+    const residents = await getCondominiumResidents(condominium_id);
+    const memberCommitments = residents
+      .filter(r => r.identity_commitment)
+      .map(r => r.identity_commitment!);
+
+    if (memberCommitments.length > 0) {
+      await addMembersToElection(
+        condominium.contract_address,
+        blockchainElectionId,
+        memberCommitments
+      );
+    }
+    
+    // Aggiungi l'ID blockchain all'elezione
+    const electionWithBlockchainId = {
+      ...election,
+      blockchain_id: blockchainElectionId
+    };
+    
+    // Salva nel database
+    const result = await collection.updateOne(
+      { _id: new mongoDB.ObjectId(condominium_id) },
+      { $push: { elections: electionWithBlockchainId } }
+    );
+    
+    console.log(`Election created on blockchain with ID: ${blockchainElectionId}`);
+    return result;
+    
+  } catch (error) {
+    console.error("Error creating election on blockchain:", error);
+    throw new Error("Failed to create election on blockchain");
+  }
 }
 
 export async function getCondominiumResidents(condominium_id: string): Promise<USER[]> {
   const collection: mongoDB.Collection<CONDOMINIUM> = await getCondominiumsCollection();
   const condominiumDocument: mongoDB.Document | null = await collection.findOne({ _id: new mongoDB.ObjectId(condominium_id) });
-  const residents: USER[] = condominiumDocument ? condominiumDocument.users.map((resident: USER) => ({
+
+  if (!condominiumDocument) {
+    throw new Error("Condominium not found");
+  }
+
+  const users = condominiumDocument.users || [];
+  const residents: USER[] = users.map((resident: USER) => ({
       id: resident._id,
       full_name: resident.full_name,
       email: resident.email,
@@ -119,7 +172,7 @@ export async function getCondominiumResidents(condominium_id: string): Promise<U
       created_at: resident.created_at,
       last_login: resident.last_login,
       identity_commitment: resident.identity_commitment
-  })) : [];
+  }));
   return residents;
 }
 

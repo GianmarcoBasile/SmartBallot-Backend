@@ -24,6 +24,7 @@ export interface ELECTION {
     id: number;
     name: string;
   }[];
+  blockchain_election_id?: number;
   _id?: ObjectId;
 }
 
