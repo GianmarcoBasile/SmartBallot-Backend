@@ -14,8 +14,14 @@ router.post('/', async (req:Request, res:Response) => {
 router.post('/register', async (req:Request, res:Response) => {
   const data : CONDOMINIUM = req.body;
   try {
-    await registerCondominium(data);
-    await addCondominiumToUser(data.admin.tax_code, data);
+    const result = await registerCondominium(data);
+    
+    // Ottieni il condominio completo con l'_id dal database
+    const createdCondominium = await findCondominiumById(result.insertedId.toString());
+    if (createdCondominium) {
+      await addCondominiumToUser(data.admin.tax_code, createdCondominium);
+    }
+    
     return res.status(201).json({status: 'success', message: 'Condominium registered successfully'});
   } catch (error) {
     console.error('Error registering condominium:', error);

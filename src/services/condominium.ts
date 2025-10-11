@@ -1,7 +1,7 @@
 import * as mongoDB from "mongodb";
 import { getCondominiumsCollection, getUsersCollection } from "../database.js";
 import type { CONDOMINIUM, ELECTION, USER } from "../types.js";
-import { addMembersToElection, BACKEND_WALLET_ADDRESS, createCondominiumContract, createElectionOnBlockchain } from "../utils/index.js";
+import { addMembersToElection, createCondominiumContract, createElectionOnBlockchain } from "../utils/index.js";
 
 export async function registerCondominium(condominium: CONDOMINIUM): Promise<mongoDB.InsertOneResult<mongoDB.Document>> {
   const collection: mongoDB.Collection<CONDOMINIUM> = await getCondominiumsCollection();
@@ -10,13 +10,8 @@ export async function registerCondominium(condominium: CONDOMINIUM): Promise<mon
     throw new Error("Failed to register condominium");
   }
   try {
-    const backendWalletAddress = BACKEND_WALLET_ADDRESS;
-    if (!backendWalletAddress) {
-      throw new Error("Backend wallet address is not defined");
-    }
     const contractAddress = await createCondominiumContract(
       result.insertedId.toString(), 
-      backendWalletAddress
     );
 
     await collection.updateOne(
@@ -133,16 +128,32 @@ export async function createCondominiumElection(condominium_id: string, election
     );
 
     const residents = await getCondominiumResidents(condominium_id);
+    console.log(`Found ${residents.length} residents:`, residents.map(r => ({
+      name: r.full_name, 
+      has_commitment: !!r.identity_commitment,
+      commitment: r.identity_commitment?.substring(0, 20) + '...'
+    })));
+    
     const memberCommitments = residents
       .filter(r => r.identity_commitment)
       .map(r => r.identity_commitment!);
 
+    console.log(`Adding ${memberCommitments.length} members to blockchain group...`);
+    
     if (memberCommitments.length > 0) {
-      await addMembersToElection(
-        condominium.contract_address,
-        blockchainElectionId,
-        memberCommitments
-      );
+      try {
+        await addMembersToElection(
+          condominium.contract_address,
+          blockchainElectionId,
+          memberCommitments
+        );
+        console.log('Members added successfully to blockchain!');
+      } catch (error) {
+        console.error('⚠️  Failed to add members to blockchain group, but continuing...');
+        console.log('💡 You can vote manually by adding members to the Semaphore group later');
+      }
+    } else {
+      console.log('⚠️  No identity commitments found - group will be empty!');
     }
     
     // Aggiungi l'ID blockchain all'elezione
@@ -174,20 +185,35 @@ export async function getCondominiumResidents(condominium_id: string): Promise<U
     throw new Error("Condominium not found");
   }
 
-  const users = condominiumDocument.users || [];
-  const residents: USER[] = users.map((resident: USER) => ({
-      id: resident._id,
-      full_name: resident.full_name,
-      email: resident.email,
-      tax_code: resident.tax_code,
-      birth_date: resident.birth_date,
-      birth_place: resident.birth_place,
-      condominiums: resident.condominiums,
-      created_at: resident.created_at,
-      last_login: resident.last_login,
-      identity_commitment: resident.identity_commitment
-  }));
-  return residents;
+  // Raccogli tutti i tax_code (admin + users)
+  const allTaxCodes: string[] = [condominiumDocument.admin.tax_code];
+  
+  if (condominiumDocument.users) {
+    condominiumDocument.users.forEach((user: any) => {
+      allTaxCodes.push(user.tax_code);
+    });
+  }
+
+  // Ottieni gli identity_commitment dai documenti principali degli utenti
+  const usersCollection = await getUsersCollection();
+  const usersWithCommitments = await usersCollection.find({ 
+    tax_code: { $in: allTaxCodes } 
+  }).toArray();
+
+  return usersWithCommitments.map(user => ({
+    _id: user._id,
+    full_name: user.full_name,
+    email: user.email,
+    tax_code: user.tax_code,
+    birth_date: user.birth_date,
+    birth_place: user.birth_place,
+    condominiums: user.condominiums || [],
+    created_at: user.created_at,
+    last_login: user.last_login,
+    identity_commitment: user.identity_commitment,
+    wallet_address: user.wallet_address,
+    password: user.password
+  } as USER));
 }
 
 export async function isCondominiumAdmin(condominiumId: string, userTaxCode: string): Promise<boolean> {

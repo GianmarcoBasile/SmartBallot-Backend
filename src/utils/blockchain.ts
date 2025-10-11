@@ -1,8 +1,8 @@
 import { Group } from "@semaphore-protocol/group";
 import { getCondominiumResidents } from "../services";
-import { CONDOMINIUM, ELECTION, USER } from "../types";
+import { ELECTION, USER } from "../types";
 import { ethers, toBigInt } from "ethers";
-import { CONDOMINIUM_VOTING_ABI, FACTORY_ABI, FACTORY_ADDRESS, PRIVATE_KEY, RPC_URL, SEMAPHORE_ADDRESS } from "./constants";
+import { CONDOMINIUM_VOTING_ABI, FACTORY_ABI, FACTORY_ADDRESS, PRIVATE_KEY, RPC_URL, SEMAPHORE_ADDRESS, BACKEND_WALLET_ADDRESS } from "./constants";
 
 export async function createVotingGroup(condominiumId: string): Promise<Group> {
   const residents = await getCondominiumResidents(condominiumId);
@@ -13,7 +13,6 @@ export async function createVotingGroup(condominiumId: string): Promise<Group> {
 
 export async function createCondominiumContract(
   condominiumId: string,
-  adminAddress: string
 ): Promise<string> {
   try {
     // Configura il provider e il wallet
@@ -39,7 +38,7 @@ export async function createCondominiumContract(
     const tx = await factory.createCondominiumVoting(
       condominiumId,
       semaphoreAddress,
-      adminAddress
+      BACKEND_WALLET_ADDRESS
     );
 
     // Aspetta la conferma della transazione

@@ -24,7 +24,7 @@ export interface ELECTION {
     id: number;
     name: string;
   }[];
-  blockchain_election_id?: number;
+  blockchain_id?: number;
   _id?: ObjectId;
 }
 
@@ -42,6 +42,7 @@ export interface CONDOMINIUM {
     email: string;
     tax_code: string;
     wallet_address: string;
+    identity_commitment?: string;
   }
   users: {
     full_name: string;
@@ -50,6 +51,7 @@ export interface CONDOMINIUM {
     unit: string;
     role: string;
     join_date: string;
+    identity_commitment?: string;
   }[];
   elections: ELECTION[],
   contract_address?: string;
