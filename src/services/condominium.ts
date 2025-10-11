@@ -1,5 +1,5 @@
 import * as mongoDB from "mongodb";
-import { getCondominiumsCollection } from "../database.js";
+import { getCondominiumsCollection, getUsersCollection } from "../database.js";
 import type { CONDOMINIUM, ELECTION, USER } from "../types.js";
 import { addMembersToElection, BACKEND_WALLET_ADDRESS, createCondominiumContract, createElectionOnBlockchain } from "../utils/index.js";
 
@@ -78,6 +78,20 @@ export async function addResidentToCondominium(condominium_id: string, resident:
   const result = await collection.updateOne(
     { _id: new mongoDB.ObjectId(condominium_id) },
     { $push: { users: resident } }
+  );
+
+  if(!result.acknowledged || result.matchedCount === 0) {
+    throw new Error("Failed to add resident to condominium");
+  }
+
+  const updatedCondominium = await collection.findOne({ _id: new mongoDB.ObjectId(condominium_id) });
+
+  if (!updatedCondominium) throw new Error("Condominium not found after update");
+
+  const collectionUsers: mongoDB.Collection<USER> = await getUsersCollection();
+  await collectionUsers.updateOne(
+    { tax_code: resident.tax_code },
+    { $push: { condominiums: updatedCondominium } }
   );
   return result;
 }
