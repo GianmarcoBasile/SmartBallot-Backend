@@ -170,6 +170,8 @@ router.get('/:condominiumId/elections/:electionId/results', requireAuth, async (
   }
 });
 
+
+
 // Ottenere dettagli di un'elezione
 router.get('/:condominiumId/elections/:electionId/details', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -250,9 +252,8 @@ router.get('/:condominiumId/group', requireAuth, async (req: AuthenticatedReques
     const identityCommitments: string[] = [];
     const usersCollection = await getUsersCollection();
     
-    // Collect all tax codes from the condominium
-    const allTaxCodes: string[] = [condominium.admin.tax_code];
-    
+    // Collect all tax codes from the condominium users (exclude administrator)
+    const allTaxCodes: string[] = [];
     if (condominium.users) {
       condominium.users.forEach(user => {
         allTaxCodes.push(user.tax_code);

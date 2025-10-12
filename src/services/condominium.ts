@@ -185,8 +185,8 @@ export async function getCondominiumResidents(condominium_id: string): Promise<U
     throw new Error("Condominium not found");
   }
 
-  // Raccogli tutti i tax_code (admin + users)
-  const allTaxCodes: string[] = [condominiumDocument.admin.tax_code];
+  // Raccogli tutti i tax_code dei residenti (escludendo l'admin)
+  const allTaxCodes: string[] = [];
   
   if (condominiumDocument.users) {
     condominiumDocument.users.forEach((user: any) => {
@@ -211,7 +211,6 @@ export async function getCondominiumResidents(condominium_id: string): Promise<U
     created_at: user.created_at,
     last_login: user.last_login,
     identity_commitment: user.identity_commitment,
-    wallet_address: user.wallet_address,
     password: user.password
   } as USER));
 }

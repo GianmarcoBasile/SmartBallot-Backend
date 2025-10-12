@@ -6,7 +6,6 @@ export interface USER {
   tax_code: string;
   birth_date: string;
   birth_place: string;
-  wallet_address?: string;
   condominiums: CONDOMINIUM[];
   created_at?: string;
   last_login?: string;
@@ -41,7 +40,6 @@ export interface CONDOMINIUM {
     full_name: string;
     email: string;
     tax_code: string;
-    wallet_address: string;
     identity_commitment?: string;
   }
   users: {
