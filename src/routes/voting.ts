@@ -316,10 +316,32 @@ router.put('/:condominiumId/elections/:electionId/close', requireAuth, requireCo
       });
     }
 
-    const txHash = await closeElection(
-      condominium.contract_address,
-      electionIdNum
-    );
+    // Controllo preventivo: chiedi i dettagli dell'elezione sulla blockchain
+    const details = await getElectionDetails(condominium.contract_address, electionIdNum);
+    if (!details) {
+      return res.status(500).json({ status: 'error', message: 'Could not fetch election details from blockchain' });
+    }
+
+    if (!details.hasExpired) {
+      return res.status(400).json({ status: 'error', message: 'Election is still ongoing and cannot be closed yet' });
+    }
+
+    if (!details.isActive) {
+      return res.status(400).json({ status: 'error', message: 'Election is already closed' });
+    }
+
+    let txHash: string;
+    try {
+      txHash = await closeElection(
+        condominium.contract_address,
+        electionIdNum
+      );
+    } catch (err: any) {
+      console.error('Error closing election (on-chain):', err);
+      // Estrapola informazioni utili dall'errore per debug
+      const short = err?.shortMessage || err?.message || 'Unknown error during on-chain call';
+      return res.status(500).json({ status: 'error', message: `Failed to close election on-chain: ${short}`, debug: { error: err?.toString?.() } });
+    }
 
     res.json({ 
       status: 'success',
