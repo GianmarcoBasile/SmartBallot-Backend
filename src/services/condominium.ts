@@ -11,7 +11,7 @@ export async function registerCondominium(condominium: CONDOMINIUM): Promise<mon
   }
   try {
     const contractAddress = await createCondominiumContract(
-      result.insertedId.toString(), 
+      result.insertedId.toString()
     );
 
     await collection.updateOne(

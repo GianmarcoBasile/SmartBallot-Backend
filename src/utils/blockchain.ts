@@ -37,8 +37,7 @@ export async function createCondominiumContract(
     // Chiama la funzione per creare il contratto del condominio
     const tx = await factory.createCondominiumVoting(
       condominiumId,
-      semaphoreAddress,
-      BACKEND_WALLET_ADDRESS
+      semaphoreAddress
     );
 
     // Aspetta la conferma della transazione
@@ -46,7 +45,7 @@ export async function createCondominiumContract(
 
     // Estrai l'indirizzo del nuovo contratto dagli eventi
     const event = receipt.logs.find((log: any) => 
-      log.topics[0] === ethers.id("CondominiumContractCreated(string,address,address)")
+      log.topics[0] === ethers.id("CondominiumContractCreated(string,address)")
     );
 
     let contractAddress: string;
@@ -55,7 +54,9 @@ export async function createCondominiumContract(
       if (!decodedEvent || decodedEvent.args.length < 2) {
         throw new Error("Impossibile decodificare l'evento");
       }
-      contractAddress = decodedEvent.args[1]; // contractAddress è il secondo parametro
+      // args[0] is the indexed condominiumId (an indexed dynamic type => decoded as an indexed object)
+      // args[1] is the contract address
+      contractAddress = decodedEvent.args[1];
     } else {
       throw new Error("Evento di creazione contratto non trovato");
     }

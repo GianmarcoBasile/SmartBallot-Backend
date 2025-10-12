@@ -5,13 +5,13 @@ export const RPC_URL = process.env.RPC_URL || "http://localhost:8545";
 export const BACKEND_WALLET_ADDRESS = process.env.BACKEND_WALLET_ADDRESS || "";
 
 export const FACTORY_ABI = [
-  "function createCondominiumVoting(string memory condominiumId, address semaphoreAddress, address admin) external returns (address)",
-  "event CondominiumContractCreated(string indexed condominiumId, address contractAddress, address admin)"
+  "function createCondominiumVoting(string memory condominiumId, address semaphoreAddress) external returns (address)",
+  "event CondominiumContractCreated(string indexed condominiumId, address contractAddress)"
 ];
 
 export const CONDOMINIUM_VOTING_ABI = [
   // Constructor
-  "constructor(address semaphoreAddress, address _admin)",
+  "constructor(address semaphoreAddress)",
   
   // Public variables (Solidity genera automaticamente getter)
   "function semaphore() external view returns (address)",
