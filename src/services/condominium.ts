@@ -102,9 +102,33 @@ export async function removeResidentFromCondominium(condominium_taxcode: string,
 
 export async function getCondominiumsFromUser(user_tax_code: string): Promise<CONDOMINIUM[]> {
   const collection: mongoDB.Collection<CONDOMINIUM> = await getCondominiumsCollection();
-  const condominiumsCursor = collection.find({ "users.tax_code": user_tax_code });
+  
+  // Trova tutti i condomini dove l'utente è admin o residente
+  const condominiumsCursor = collection.find({
+    $or: [
+      { "admin.tax_code": user_tax_code },
+      { "users.tax_code": user_tax_code }
+    ]
+  });
+  
   const condominiums: CONDOMINIUM[] = await condominiumsCursor.toArray();
-  return condominiums;
+  
+  // Assicuriamoci che le elezioni siano sempre incluse (anche se vuote)
+  return condominiums.map(doc => ({
+    _id: doc._id,
+    name: doc.name,
+    address: doc.address,
+    totalUnits: doc.totalUnits,
+    city: doc.city,
+    postalCode: doc.postalCode,
+    province: doc.province,
+    taxCode: doc.taxCode,
+    admin: doc.admin,
+    users: doc.users || [],
+    description: doc.description,
+    elections: doc.elections || [], // Assicuriamoci che le elezioni siano sempre incluse
+    contract_address: doc.contract_address
+  } as CONDOMINIUM));
 }
 
 export async function createCondominiumElection(condominium_id: string, election: ELECTION): Promise<mongoDB.UpdateResult> {
@@ -223,3 +247,5 @@ export async function isCondominiumAdmin(condominiumId: string, userTaxCode: str
   });
   return !!condominium;
 }
+
+
