@@ -152,11 +152,6 @@ export async function createCondominiumElection(condominium_id: string, election
     );
 
     const residents = await getCondominiumResidents(condominium_id);
-    console.log(`Found ${residents.length} residents:`, residents.map(r => ({
-      name: r.full_name, 
-      has_commitment: !!r.identity_commitment,
-      commitment: r.identity_commitment?.substring(0, 20) + '...'
-    })));
     
     const memberCommitments = residents
       .filter(r => r.identity_commitment)
@@ -173,11 +168,10 @@ export async function createCondominiumElection(condominium_id: string, election
         );
         console.log('Members added successfully to blockchain!');
       } catch (error) {
-        console.error('⚠️  Failed to add members to blockchain group, but continuing...');
-        console.log('💡 You can vote manually by adding members to the Semaphore group later');
+        console.error('Failed to add members to blockchain group');
       }
     } else {
-      console.log('⚠️  No identity commitments found - group will be empty!');
+      console.log('No identity commitments found - group will be empty!');
     }
     
     // Aggiungi l'ID blockchain all'elezione

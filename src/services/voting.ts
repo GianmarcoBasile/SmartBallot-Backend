@@ -31,12 +31,6 @@ export async function submitVote(
       throw new Error('Vote function not found in contract');
     }
 
-    console.log("Submitting vote:", {
-      electionId,
-      optionIndex,
-      contractAddress
-    });
-
     // Converti la proof nel formato atteso dal contratto
     const formattedProof = {
       merkleTreeDepth: proof.merkleTreeDepth,
@@ -160,16 +154,6 @@ export async function closeElection(
 
     console.log(`Closing election ${electionId}`);
       try {
-        // Prova una chiamata di tipo 'eth_call' (read-only) usando il calldata per ottenere un possibile revert reason
-        try {
-          const calldata = condominiumContract.interface.encodeFunctionData('closeElection', [electionId]);
-          const fromAddress = await wallet.getAddress();
-          await provider.call({ to: contractAddress, data: calldata, from: fromAddress });
-        } catch (staticErr: any) {
-          console.error('Static call closeElection reverted (provider.call):', staticErr);
-          throw new Error(`On-chain closeElection reverted: ${staticErr?.shortMessage || staticErr?.message || staticErr?.toString()}`);
-        }
-
         const tx = await condominiumContract.closeElection(electionId);
         await tx.wait();
 
@@ -177,13 +161,11 @@ export async function closeElection(
         return tx.hash;
       } catch (error: any) {
         console.error('Error closing election (service):', error);
-        // Se l'errore contiene dettagli RPC, loggali per debug
         if (error?.info) {
           console.error('Error info:', error.info);
         }
         throw error;
       }
-    
   } catch (error) {
     console.error("Error closing election:", error);
     throw error;

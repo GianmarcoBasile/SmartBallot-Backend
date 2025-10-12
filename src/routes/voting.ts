@@ -48,21 +48,7 @@ router.post('/:condominiumId/elections/:electionId/vote', requireAuth, async (re
     // Verifica che l'elezione esista
     const electionIdNum = parseInt(electionId);
     
-    console.log('Looking for election with blockchain_id:', electionIdNum);
-    console.log('Available elections:', condominium.elections?.map(e => ({ 
-      name: e.name, 
-      blockchain_id: e.blockchain_id,
-      _id: e._id
-    })));
-    
-    // Prima prova con blockchain_id, poi come fallback con l'indice dell'array
     let election = condominium.elections?.find(e => e.blockchain_id === electionIdNum);
-    
-    // Fallback per elezioni create prima dell'implementazione blockchain_id
-    if (!election && electionIdNum < (condominium.elections?.length || 0)) {
-      election = condominium.elections[electionIdNum];
-      console.log('Using fallback election by index:', electionIdNum);
-    }
     
     if (!election) {
       return res.status(404).json({ 
@@ -270,8 +256,6 @@ router.get('/:condominiumId/group', requireAuth, async (req: AuthenticatedReques
         identityCommitments.push(user.identity_commitment);
       }
     });
-
-    console.log('Found identity commitments for condominium:', identityCommitments.length);
 
     res.json({ 
       status: 'success',
