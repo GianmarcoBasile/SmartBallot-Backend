@@ -108,8 +108,6 @@ export async function requireCondominiumMember(
       return;
     }
 
-    console.log('condominiumId found:', condominiumId);
-
     if (!condominiumId) {
       res.status(400).json({ status: 'error', message: 'ID condominio mancante' });
       return;
