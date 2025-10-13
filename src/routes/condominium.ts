@@ -2,6 +2,7 @@ import { Router, type Request, type Response } from "express";
 import type { CONDOMINIUM } from "../types.js";
 import { addCondominiumToUser } from "../services/user.js";
 import { addResidentToCondominium, createCondominiumElection, findCondominiumById, getCondominiumsFromUser, registerCondominium, removeResidentFromCondominium } from "../services/condominium.js";
+import { requireAuth, requireCondominiumAdmin, requireCondominiumMember } from "../middlewares.js";
 
 const router:Router = Router();
 
@@ -29,7 +30,7 @@ router.post('/register', async (req:Request, res:Response) => {
   }
 });
 
-router.post('/:id/addResident', async (req:Request, res:Response) => {
+router.post('/:id/addResident', requireAuth, requireCondominiumAdmin, async (req:Request, res:Response) => {
   if (!req.params.id) {
     return res.status(400).json({status: 'error', message: 'Condominium ID is required'});
   }
@@ -44,7 +45,7 @@ router.post('/:id/addResident', async (req:Request, res:Response) => {
   }
 });
 
-router.post('/:id/removeResident', async (req:Request, res:Response) => {
+router.post('/:id/removeResident', requireAuth, requireCondominiumAdmin, async (req:Request, res:Response) => {
   if (!req.params.id) {
     return res.status(400).json({status: 'error', message: 'Condominium ID is required'});
   }
@@ -62,7 +63,7 @@ router.post('/:id/removeResident', async (req:Request, res:Response) => {
   }
 });
 
-router.get('/:id', async (req:Request, res:Response) => {
+router.get('/:id', requireAuth, requireCondominiumMember, async (req:Request, res:Response) => {
   if (!req.params.id) {
     return res.status(400).json({status: 'error', message: 'Condominium ID is required'});
   }
@@ -79,7 +80,7 @@ router.get('/:id', async (req:Request, res:Response) => {
   }
 });
 
-router.post('/:id/createElection', async (req:Request, res:Response) => {
+router.post('/:id/createElection', requireAuth, requireCondominiumAdmin, async (req:Request, res:Response) => {
   if(!req.params.id) {
     return res.status(400).json({status: 'error', message: 'Condominium ID is required'});
   }

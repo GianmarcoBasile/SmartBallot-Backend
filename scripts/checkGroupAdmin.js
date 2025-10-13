@@ -2,14 +2,12 @@ const ethers = require('ethers');
 const dotenv = require('dotenv');
 const path = require('path');
 
-// Carica .env (il file si trova in backend/.env)
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const SEMAPHORE_ADDRESS = process.env.SEMAPHORE_ADDRESS;
 const BACKEND_WALLET_ADDRESS = process.env.BACKEND_WALLET_ADDRESS;
 const RPC_URL = process.env.RPC_URL || 'http://127.0.0.1:8545';
 
-// ABI minimale per leggere l'admin di un gruppo
 const SEMAPHORE_ABI = [
   'function getGroupAdmin(uint256) view returns (address)'
 ];

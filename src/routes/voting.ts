@@ -1,13 +1,13 @@
 import { Router, type Request, type Response } from "express";
 import { submitVote, getElectionResults, getElectionDetails, closeElection } from "../services/voting.js";
 import { findCondominiumById } from "../services/condominium.js";
-import { requireAuth, requireCondominiumAdmin, type AuthenticatedRequest } from "../middleware/auth.js";
+import { requireAuth, requireCondominiumAdmin, requireCondominiumMember, type AuthenticatedRequest } from "../middlewares.js";
 import { getUsersCollection } from "../database.js";
 
 const router: Router = Router();
 
 // Sottomettere un voto
-router.post('/:condominiumId/elections/:electionId/vote', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/:condominiumId/elections/:electionId/vote', requireAuth, requireCondominiumMember, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const condominiumId = req.params.condominiumId;
     const electionId = req.params.electionId;
@@ -90,7 +90,7 @@ router.post('/:condominiumId/elections/:electionId/vote', requireAuth, async (re
 });
 
 // Ottenere i risultati di un'elezione
-router.get('/:condominiumId/elections/:electionId/results', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/:condominiumId/elections/:electionId/results', requireAuth, requireCondominiumMember, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const condominiumId = req.params.condominiumId;
     const electionId = req.params.electionId;
@@ -159,7 +159,7 @@ router.get('/:condominiumId/elections/:electionId/results', requireAuth, async (
 
 
 // Ottenere dettagli di un'elezione
-router.get('/:condominiumId/elections/:electionId/details', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/:condominiumId/elections/:electionId/details', requireAuth, requireCondominiumMember, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const condominiumId = req.params.condominiumId;
     const electionId = req.params.electionId;
@@ -212,9 +212,8 @@ router.get('/:condominiumId/elections/:electionId/details', requireAuth, async (
   }
 });
 
-// Chiudere un'elezione (solo per admin)
 // Ottieni il gruppo Semaphore per un condominio
-router.get('/:condominiumId/group', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/:condominiumId/group', requireAuth, requireCondominiumMember, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const condominiumId = req.params.condominiumId;
     
