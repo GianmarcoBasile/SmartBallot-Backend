@@ -1,122 +1,128 @@
-import { Request, Response, NextFunction } from 'express';
-import { findCondominiumById } from './services/condominium.js';
-import { verifyToken } from './utils/jwt.js';
-import type { USER } from './types.js';
+import { Request, Response, NextFunction } from "express";
+import { findCondominiumById } from "./services/condominium.js";
+import { verifyToken } from "./utils/jwt.js";
+import type { CONDOMINIUM, USER } from "./types.js";
 
 export interface AuthenticatedRequest extends Request {
   user?: USER;
 }
 
-// Middleware di autenticazione usando la tua implementazione JWT esistente
+// Authentication middleware to protect routes
 export async function requireAuth(
-  req: AuthenticatedRequest, 
-  res: Response, 
-  next: NextFunction
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
 ): Promise<void> {
   try {
     const authHeader = req.headers.authorization;
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      res.status(401).json({ 
-        status: 'error', 
-        message: 'Token di autenticazione mancante' 
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      res.status(401).json({
+        status: "error",
+        message: "Authentication token is missing or malformed",
       });
       return;
     }
 
     const token = authHeader.substring(7);
-    
-    const user = await verifyToken('access', token);
-    
+
+    const user = await verifyToken("access", token);
+
     if (!user) {
-      res.status(401).json({ 
-        status: 'error', 
-        message: 'Token non valido o scaduto' 
+      res.status(401).json({
+        status: "error",
+        message: "Token is not valid or expired",
       });
       return;
     }
 
     req.user = user;
-    
+
     next();
   } catch (error) {
-    console.error('Errore nel middleware di autenticazione:', error);
-    res.status(500).json({ 
-      status: 'error', 
-      message: 'Errore interno del server' 
+    console.error("Error in authentication middleware:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Internal server error",
     });
   }
 }
 
+// Middleware to check if the user is an admin of the specified condominium
 export async function requireCondominiumAdmin(
-  req: AuthenticatedRequest, 
-  res: Response, 
-  next: NextFunction
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
 ): Promise<void> {
   try {
     const condominiumId = req.params.condominiumId || req.params.id;
     const userTaxCode = req.user?.tax_code;
-    
+
     if (!req.user || !userTaxCode) {
-      res.status(401).json({ 
-        status: 'error', 
-        message: 'Non autenticato' 
+      res.status(401).json({
+        status: "error",
+        message: "Not authenticated",
       });
       return;
     }
 
     if (!condominiumId) {
-      res.status(400).json({ 
-        status: 'error', 
-        message: 'ID condominio mancante' 
+      res.status(400).json({
+        status: "error",
+        message: "Condominium ID is missing",
       });
       return;
     }
-    
-    const { isCondominiumAdmin } = await import('./services/condominium.js');
-    
+
+    const { isCondominiumAdmin } = await import("./services/condominium.js");
+
     const isAdmin = await isCondominiumAdmin(condominiumId, userTaxCode);
     if (!isAdmin) {
-      res.status(403).json({ 
-        status: 'error', 
-        message: 'Non sei amministratore di questo condominio' 
+      res.status(403).json({
+        status: "error",
+        message: "You are not an admin of this condominium",
       });
       return;
     }
-    
+
     next();
   } catch (error) {
-    console.error('Errore nel controllo admin:', error);
-    res.status(500).json({ 
-      status: 'error', 
-      message: 'Errore interno del server' 
+    console.error("Error in condominium admin check:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Internal server error",
     });
   }
 }
 
+// Middleware to check if the user is a member of the specified condominium
 export async function requireCondominiumMember(
   req: AuthenticatedRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> {
   try {
     const condominiumId = req.params.condominiumId || req.params.id;
     const userTaxCode = req.user?.tax_code;
 
     if (!req.user || !userTaxCode) {
-      res.status(401).json({ status: 'error', message: 'Non autenticato' });
+      res.status(401).json({ status: "error", message: "Not authenticated" });
       return;
     }
 
     if (!condominiumId) {
-      res.status(400).json({ status: 'error', message: 'ID condominio mancante' });
+      res
+        .status(400)
+        .json({ status: "error", message: "Condominium ID is missing" });
       return;
     }
 
     const condominium = await findCondominiumById(condominiumId);
 
     if (!condominium) {
-      res.status(404).json({ status: 'error', message: 'Condominio non trovato' });
+      res
+        .status(404)
+        .json({ status: "error", message: "Condominium not found" });
       return;
     }
 
@@ -125,19 +131,23 @@ export async function requireCondominiumMember(
       return;
     }
 
-    // Controlla nell'array users
     if (Array.isArray(condominium.users)) {
-      const found = condominium.users.find((u: any) => u.tax_code === userTaxCode);
+      const found = condominium.users.find(
+        (u: any) => u.tax_code === userTaxCode,
+      );
       if (found) {
         next();
         return;
       }
     }
 
-    res.status(403).json({ status: 'error', message: 'Non sei membro di questo condominio' });
+    res.status(403).json({
+      status: "error",
+      message: "You are not a member of this condominium",
+    });
     return;
   } catch (error) {
-    console.error('Errore nel controllo membership:', error);
-    res.status(500).json({ status: 'error', message: 'Errore interno del server' });
+    console.error("Error in membership check:", error);
+    res.status(500).json({ status: "error", message: "Internal server error" });
   }
 }

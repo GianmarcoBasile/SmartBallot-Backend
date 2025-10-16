@@ -41,7 +41,7 @@ export interface CONDOMINIUM {
     email: string;
     tax_code: string;
     identity_commitment?: string;
-  }
+  };
   users: {
     full_name: string;
     email: string;
@@ -51,7 +51,7 @@ export interface CONDOMINIUM {
     join_date: string;
     identity_commitment?: string;
   }[];
-  elections: ELECTION[],
+  elections: ELECTION[];
   contract_address?: string;
   _id?: ObjectId;
 }
