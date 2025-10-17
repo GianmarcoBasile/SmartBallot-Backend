@@ -24,15 +24,27 @@ Il backend è scritto in TypeScript ed espone una REST API per la gestione di ut
 
 2. Installa le dipendenze (con pnpm o npm):
 
-	pnpm install
-  oppure
-	npm install
+```bash
+pnpm install
+```
+
+Se usi npm:
+
+```bash
+npm install
+```
 
 3. Compilazione e avvio (local):
 
-  pnpm start
-  oppure
-	npm run start
+```bash
+pnpm install
+```
+
+Se usi npm:
+
+```bash
+npm install
+```
 
 Lo script `start` compila TypeScript e avvia `dist/index.js`.
 
