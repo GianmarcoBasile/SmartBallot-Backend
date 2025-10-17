@@ -4,7 +4,6 @@ import express from "express";
 import cookieparser from "cookie-parser";
 import authRoutes from "./routes/auth.js";
 import condominiumRoutes from "./routes/condominium.js";
-import userRoutes from "./routes/users.js";
 import votingRoutes from "./routes/voting.js";
 
 dotenv.config();
@@ -26,7 +25,6 @@ const port: number = Number(process.env.SERVER_PORT) || 3000;
 
 app.use("/api/auth", authRoutes);
 app.use("/api/condominiums", condominiumRoutes);
-app.use("/api/user", userRoutes);
 app.use("/api/voting", votingRoutes);
 
 app.listen(port, () => {
