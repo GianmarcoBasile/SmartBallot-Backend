@@ -13,6 +13,11 @@ export async function registerCondominium(
 ): Promise<mongoDB.InsertOneResult<mongoDB.Document>> {
   const collection: mongoDB.Collection<CONDOMINIUM> =
     await getCondominiumsCollection();
+
+  if (await findCondominiumByTaxCode(condominium.taxCode)) {
+    throw new Error("Condominium with this tax code already exists");
+  }
+
   const result = await collection.insertOne(condominium);
   if (!result.acknowledged) {
     throw new Error("Failed to register condominium");
@@ -71,7 +76,7 @@ export async function findCondominiumByTaxCode(
   const collection: mongoDB.Collection<CONDOMINIUM> =
     await getCondominiumsCollection();
   const condominiumDocument: mongoDB.Document | null = await collection.findOne(
-    { condominium_taxcode },
+    { taxCode: condominium_taxcode },
   );
   const condominium: CONDOMINIUM | null = condominiumDocument
     ? {
